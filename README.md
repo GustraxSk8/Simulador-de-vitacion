@@ -1,2 +1,401 @@
 # Simulador-de-vitacion
 Simulador de proceso de paso a paso de como votar
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simulador de Votación - Luque</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0a0a0a;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 10px;
+  }
+  .machine {
+    background: linear-gradient(180deg, #1c1c1c, #000);
+    border-radius: 22px;
+    padding: 14px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  }
+  .screen {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+  }
+  .header {
+    background: #002868;
+    color: #fff;
+    text-align: center;
+    padding: 14px 10px 10px;
+  }
+  .header .tit {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .header .sub {
+    font-size: 11px;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+  .distrito {
+    background: #d4af37;
+    color: #002868;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px;
+  }
+  .cargo-bar {
+    background: #eee;
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #ccc;
+  }
+  .candidatos {
+    flex: 1;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .candidato-card {
+    display: flex;
+    align-items: center;
+    border: 2px solid #c62828;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.08s;
+    position: relative;
+  }
+  .candidato-card:active { transform: scale(0.98); }
+  .candidato-card.selected {
+    border-color: #1b5e20;
+    box-shadow: 0 0 0 3px rgba(27,94,32,0.35);
+    background: #f1f8f1;
+  }
+  .num-box {
+    background: #c62828;
+    color: #fff;
+    font-size: 30px;
+    font-weight: 800;
+    width: 68px;
+    min-width: 68px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 0;
+  }
+  .candidato-card.selected .num-box { background: #1b5e20; }
+  .cand-info {
+    padding: 8px 10px;
+    flex: 1;
+  }
+  .cand-nombre {
+    font-weight: 700;
+    font-size: 15px;
+    color: #111;
+  }
+  .cand-partido {
+    font-size: 11px;
+    color: #555;
+    margin-top: 2px;
+  }
+  .cand-lista {
+    font-size: 11px;
+    color: #c62828;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .check {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid #999;
+    margin-right: 10px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: #fff;
+  }
+  .candidato-card.selected .check {
+    background: #1b5e20;
+    border-color: #1b5e20;
+  }
+  .blanco-card {
+    border: 2px dashed #999;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    background: #fafafa;
+  }
+  .blanco-card.selected {
+    border-color: #1b5e20;
+    color: #1b5e20;
+    background: #f1f8f1;
+  }
+  .footer-btns {
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid #ddd;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-confirmar {
+    background: #1b5e20;
+    color: #fff;
+  }
+  .btn-confirmar:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+  .btn-corregir {
+    background: #eee;
+    color: #333;
+  }
+  .result-screen {
+    padding: 30px 20px;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .result-screen .ok-icon {
+    font-size: 50px;
+  }
+  .result-screen h2 { color: #1b5e20; font-size: 18px; }
+  .result-screen p { font-size: 13px; color: #444; }
+  .panel {
+    max-width: 440px;
+    width: 100%;
+    margin-top: 16px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px;
+    color: #111;
+  }
+  .panel h3 { font-size: 15px; margin-bottom: 10px; color: #002868; }
+  .bar-row { margin-bottom: 10px; }
+  .bar-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; display:flex; justify-content: space-between;}
+  .bar-bg { background: #eee; border-radius: 6px; height: 16px; overflow: hidden; }
+  .bar-fill { height: 100%; background: #c62828; transition: width 0.4s; }
+  .bar-fill.green { background: #1b5e20; }
+  .total-line { font-size: 12px; color: #666; margin-top: 8px; text-align: right; }
+  .share-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .share-bar button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #25D366;
+    color: #fff;
+  }
+  .share-bar button.alt { background: #002868; }
+  .nota {
+    font-size: 10.5px;
+    color: #888;
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<div class="machine" id="app">
+
+  <div class="screen" id="voteScreen">
+    <div class="header">
+      <div class="tit">SIMULADOR DE VOTACIÓN</div>
+      <div class="sub">Elecciones Internas — Partido Colorado (ANR)</div>
+    </div>
+    <div class="distrito">DISTRITO: LUQUE — DEPARTAMENTO CENTRAL</div>
+    <div class="cargo-bar">Cargo: CONVENCIONAL / LISTA — Seleccione un candidato</div>
+
+    <div class="candidatos">
+      <div class="candidato-card" data-op="1" onclick="seleccionar(this,'1','Hugo Farías')">
+        <div class="check"></div>
+        <div class="num-box">1</div>
+        <div class="cand-info">
+          <div class="cand-nombre">Hugo Farías</div>
+          <div class="cand-partido">Partido Colorado (ANR)</div>
+          <div class="cand-lista">Lista 1 — Opción 1</div>
+        </div>
+      </div>
+
+      <div class="candidato-card" data-op="7" onclick="seleccionar(this,'7','Mario Pineda')">
+        <div class="check"></div>
+        <div class="num-box">7</div>
+        <div class="cand-info">
+          <div class="cand-nombre">Mario Pineda</div>
+          <div class="cand-partido">Partido Colorado (ANR)</div>
+          <div class="cand-lista">Lista 1 — Opción 7</div>
+        </div>
+      </div>
+
+      <div class="blanco-card" id="blancoCard" onclick="votarBlanco()">
+        VOTO EN BLANCO
+      </div>
+    </div>
+
+    <div class="footer-btns">
+      <button class="btn btn-corregir" onclick="corregir()">Corregir</button>
+      <button class="btn btn-confirmar" id="btnConfirmar" disabled onclick="confirmarVoto()">Confirmar voto</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="panel" id="resultPanel" style="display:none;">
+  <h3>Resultados de la simulación</h3>
+  <div class="bar-row">
+    <div class="bar-label"><span>Hugo Farías (Op. 1)</span><span id="pct1">0%</span></div>
+    <div class="bar-bg"><div class="bar-fill" id="bar1" style="width:0%"></div></div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label"><span>Mario Pineda (Op. 7)</span><span id="pct7">0%</span></div>
+    <div class="bar-bg"><div class="bar-fill green" id="bar7" style="width:0%"></div></div>
+  </div>
+  <div class="bar-row">
+    <div class="bar-label"><span>Voto en blanco</span><span id="pctB">0%</span></div>
+    <div class="bar-bg"><div class="bar-fill" id="barB" style="width:0%; background:#999;"></div></div>
+  </div>
+  <div class="total-line" id="totalVotos">Total de votos: 0</div>
+
+  <div class="share-bar">
+    <button onclick="compartirWhatsApp()">Compartir por WhatsApp</button>
+    <button class="alt" onclick="location.reload()">Votar de nuevo</button>
+  </div>
+  <div class="nota">Simulación no oficial con fines de práctica. No reemplaza al sistema oficial del TSJE ni constituye un voto válido.</div>
+</div>
+
+<script>
+let seleccion = null;
+
+function seleccionar(el, op, nombre) {
+  document.querySelectorAll('.candidato-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('blancoCard').classList.remove('selected');
+  el.classList.add('selected');
+  el.querySelector('.check').innerHTML = '✓';
+  document.querySelectorAll('.candidato-card').forEach(c => { if(c!==el) c.querySelector('.check').innerHTML=''; });
+  seleccion = { op, nombre };
+  document.getElementById('btnConfirmar').disabled = false;
+}
+
+function votarBlanco() {
+  document.querySelectorAll('.candidato-card').forEach(c => {
+    c.classList.remove('selected');
+    c.querySelector('.check').innerHTML = '';
+  });
+  document.getElementById('blancoCard').classList.add('selected');
+  seleccion = { op: 'blanco', nombre: 'Voto en blanco' };
+  document.getElementById('btnConfirmar').disabled = false;
+}
+
+function corregir() {
+  seleccion = null;
+  document.querySelectorAll('.candidato-card').forEach(c => {
+    c.classList.remove('selected');
+    c.querySelector('.check').innerHTML = '';
+  });
+  document.getElementById('blancoCard').classList.remove('selected');
+  document.getElementById('btnConfirmar').disabled = true;
+}
+
+function getVotos() {
+  const raw = localStorage.getItem('votos_luque_sim');
+  return raw ? JSON.parse(raw) : { "1": 0, "7": 0, "blanco": 0 };
+}
+function setVotos(v) {
+  localStorage.setItem('votos_luque_sim', JSON.stringify(v));
+}
+
+function confirmarVoto() {
+  if (!seleccion) return;
+  const votos = getVotos();
+  votos[seleccion.op] = (votos[seleccion.op] || 0) + 1;
+  setVotos(votos);
+
+  document.getElementById('voteScreen').innerHTML = `
+    <div class="result-screen">
+      <div class="ok-icon">✅</div>
+      <h2>Voto registrado</h2>
+      <p>Su voto para <b>${seleccion.nombre}</b> fue registrado en esta simulación.</p>
+    </div>
+  `;
+  mostrarResultados(votos);
+}
+
+function mostrarResultados(votos) {
+  const total = votos["1"] + votos["7"] + votos["blanco"];
+  const pct = (n) => total > 0 ? Math.round((n/total)*100) : 0;
+  document.getElementById('pct1').textContent = pct(votos["1"]) + '%';
+  document.getElementById('pct7').textContent = pct(votos["7"]) + '%';
+  document.getElementById('pctB').textContent = pct(votos["blanco"]) + '%';
+  document.getElementById('bar1').style.width = pct(votos["1"]) + '%';
+  document.getElementById('bar7').style.width = pct(votos["7"]) + '%';
+  document.getElementById('barB').style.width = pct(votos["blanco"]) + '%';
+  document.getElementById('totalVotos').textContent = 'Total de votos: ' + total;
+  document.getElementById('resultPanel').style.display = 'block';
+}
+
+function compartirWhatsApp() {
+  const url = window.location.href;
+  const texto = encodeURIComponent('🗳️ Participá en la simulación de votación de Luque (Partido Colorado) - Opción 1: Hugo Farías / Opción 7: Mario Pineda. Entrá y votá acá: ' + url);
+  window.open('https://wa.me/?text=' + texto, '_blank');
+}
+
+// show existing results on load if any votes exist
+window.onload = function() {
+  const votos = getVotos();
+  const total = votos["1"] + votos["7"] + votos["blanco"];
+  if (total > 0) {
+    mostrarResultados(votos);
+  }
+};
+</script>
+
+</body>
+</html>
+```
